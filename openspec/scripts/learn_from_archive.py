@@ -3,6 +3,8 @@
 """
 from pathlib import Path
 import yaml
+from utils import extract_yaml_frontmatter, slugify, extract_section
+import re
 
 def learn_from_archive(change_id: str):
     """分析完整的变更，提取系统级知识"""
@@ -125,30 +127,146 @@ Claude Code 将始终加载此文件。
 
 def extract_component_name(line: str) -> str:
     """从标记行提取组件名"""
-    pass
-
-def extract_yaml_frontmatter(content: str) -> dict:
-    """解析 YAML frontmatter"""
-    import yaml
-    # 实现解析逻辑
-    pass
+    # 假设格式像：### Requirement: Component Name
+    match = re.search(r'### Requirement:\s*(.+?)(?:\n|$)', line)
+    if match:
+        return match.group(1).strip()
+    return "未知组件"
 
 def collect_related_errors(change_id: str) -> list[dict]:
     """收集相关错误"""
-    pass
-
+    errors = []
+    errors_dir = Path("openspec/knowledge/lessons/errors")
+    
+    if not errors_dir.exists():
+        return []
+    
+    for error_file in errors_dir.glob("*.md"):
+        content = error_file.read_text()
+        metadata = extract_yaml_frontmatter(content)
+        
+        # 检查是否与此变更相关
+        if metadata.get('related_change') == change_id:
+            errors.append({
+                "file": error_file.name,
+                "metadata": metadata,
+                "content": content
+            })
+    
+    return errors
 def collect_related_patterns(change_id: str) -> list[dict]:
     """收集相关模式"""
-    pass
+    patterns = []
+    patterns_dir = Path("openspec/knowledge/lessons/patterns")
+    
+    if not patterns_dir.exists():
+        return []
+    
+    for pattern_file in patterns_dir.glob("*.md"):
+        content = pattern_file.read_text()
+        metadata = extract_yaml_frontmatter(content)
+        
+        if metadata.get('related_change') == change_id:
+            patterns.append({
+                "file": pattern_file.name,
+                "metadata": metadata,
+                "content": content
+            })
+    
+    return patterns
 
 def extract_high_value_insights(system_insight: str) -> list[dict]:
     """从系统洞察中提取高价值见解"""
-    pass
+    insights = []
+    
+    # 解析 YAML frontmatter
+    metadata = extract_yaml_frontmatter(system_insight)
+    category = metadata.get('category', '架构理解')
+    
+    # 提取标题
+    title_match = re.search(r'^# 系统洞察：(.+)$', system_insight, re.MULTILINE)
+    title = title_match.group(1) if title_match else "系统洞察"
+    
+    # 提取关键学习点
+    learning_points_section = extract_section(system_insight, "## 关键学习点")
+    
+    if learning_points_section:
+        # 假设每个学习点是一个列表项
+        points = re.findall(r'^[-*]\s+(.+)$', learning_points_section, re.MULTILINE)
+        
+        for point in points[:3]:  # 最多提取 3 个
+            insights.append({
+                "title": title,
+                "summary": point.strip(),
+                "category": category,
+                "helpful": 0,
+                "harmful": 0,
+                "source": f"system-knowledge/{metadata.get('related_change', 'unknown')}.md"
+            })
+    
+    return insights
 
 def parse_claude_md_insights(content: str) -> list[dict]:
     """解析 CLAUDE.md 中的现有见解"""
-    pass
+    insights = []
+    
+    # 按 section 分割
+    sections = ["架构理解", "关键决策", "常见陷阱", "最佳实践"]
+    
+    for section in sections:
+        section_content = extract_section(content, f"## {section}")
+        
+        if not section_content:
+            continue
+        
+        # 提取每个见解（### 标题）
+        insight_blocks = re.split(r'^### ', section_content, flags=re.MULTILINE)
+        
+        for block in insight_blocks[1:]:  # 跳过第一个空块
+            lines = block.split('\n')
+            title = lines[0].strip()
+            
+            # 提取摘要（第一段非空行）
+            summary = ""
+            for line in lines[1:]:
+                if line.strip() and not line.startswith('*来源'):
+                    summary = line.strip()
+                    break
+            
+            # 提取来源和 helpful 计数
+            source_match = re.search(r'\*来源:\s*(.+?)\s*\|\s*有用次数:\s*(\d+)', block)
+            source = source_match.group(1) if source_match else "未知"
+            helpful = int(source_match.group(2)) if source_match else 0
+            
+            insights.append({
+                "title": title,
+                "summary": summary,
+                "category": section,
+                "helpful": helpful,
+                "harmful": 0,
+                "source": source
+            })
+    
+    return insights
 
 def update_playbook_from_insights(system_insight: str):
     """从洞察更新 Playbook"""
-    pass
+    from ace_integration import get_playbook
+    
+    playbook = get_playbook()
+    
+    # 提取关键学习点作为新规则
+    learning_points_section = extract_section(system_insight, "## 关键学习点")
+    
+    if learning_points_section:
+        metadata = extract_yaml_frontmatter(system_insight)
+        change_id = metadata.get('related_change', 'unknown')
+        
+        points = re.findall(r'^[-*]\s+(.+)$', learning_points_section, re.MULTILINE)
+        
+        for point in points:
+            rule_name = f"学习自 {change_id}"
+            playbook.add_rule(rule_name, point.strip())
+    
+    # 保存更新后的 playbook
+    playbook.save("openspec/knowledge/playbook.json")

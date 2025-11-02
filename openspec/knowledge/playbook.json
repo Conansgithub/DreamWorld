@@ -1,0 +1,21 @@
+{
+  "rules": [],
+  "templates": {
+    "technical-decision": {
+      "required_sections": ["背景与问题", "考虑的方案", "最终决策", "接受的代价"],
+      "quality_criteria": ["至少 2 个替代方案", "明确的选择理由"]
+    },
+    "error-solution": {
+      "required_sections": ["症状", "根本原因", "解决方案", "预防措施"],
+      "quality_criteria": ["清晰的复现步骤", "具体的解决代码"]
+    },
+    "code-pattern": {
+      "required_sections": ["问题", "模式代码", "何时使用", "权衡"],
+      "quality_criteria": ["完整的代码示例", "清晰的适用场景"]
+    }
+  },
+  "metadata": {
+    "version": "1.0",
+    "last_updated": "2025-11-02"
+  }
+}

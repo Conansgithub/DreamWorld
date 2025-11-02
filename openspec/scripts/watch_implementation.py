@@ -62,15 +62,37 @@ class ImplementationWatcher(FileSystemEventHandler):
 
 def parse_test_failure(output: str) -> dict:
     """解析测试失败信息"""
-    pass
+    # 简单的错误解析
+    error_lines = []
+    for line in output.split('\n'):
+        if 'FAILED' in line or 'ERROR' in line or 'AssertionError' in line:
+            error_lines.append(line)
+    
+    if not error_lines:
+        return None
+    
+    summary = error_lines[0][:100]  # 取第一行前 100 字符
+    
+    from utils import slugify
+    
+    return {
+        "summary": summary,
+        "full_output": output[:1000],  # 保留前 1000 字符
+        "slug": slugify(summary)
+    }
 
 def is_duplicate_error(self, error_info: dict) -> bool:
     """检查是否重复错误"""
-    pass
+    # 简单检查：如果 slug 相同就认为重复
+    for existing in self.recent_errors:
+        if existing['slug'] == error_info['slug']:
+            return True
+    return False
 
 def index_to_chromadb(doc: str, collection: str):
     """向量化索引"""
-    pass
+    from learn_from_proposal import index_to_chromadb as index_func
+    index_func(doc, collection)
 
 # 启动监视器
 def start_watching(change_id: str):

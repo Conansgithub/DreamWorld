@@ -1,6 +1,9 @@
 from mcp import Server, Tool
 import chromadb
 from pathlib import Path
+from utils import extract_yaml_frontmatter, replace_yaml_frontmatter, extract_code_block
+from datetime import datetime
+import re
 
 app = Server("openspec-knowledge")
 
@@ -194,27 +197,64 @@ def search_by_spec(spec_path: str, collection_name: str, top_k: int = 5) -> list
 
 def extract_solution_summary(doc: str) -> str:
     """提取解决方案摘要"""
-    pass
+    solution_section = extract_section(doc, "## 解决方案")
+    if solution_section:
+        # 返回前 200 字符
+        return solution_section[:200].strip() + "..."
+    return "见完整文档"
+
+def extract_section(markdown: str, heading: str) -> str:
+    """提取 markdown section（复制自 utils.py）"""
+    from utils import extract_section as util_extract_section
+    return util_extract_section(markdown, heading)
 
 def extract_code_block(doc: str) -> str:
     """提取代码块"""
     pass
 
-def extract_yaml_frontmatter(content: str) -> dict:
-    """解析 YAML frontmatter"""
-    pass
-
-def replace_yaml_frontmatter(content: str, metadata: dict) -> str:
-    """替换 YAML frontmatter"""
-    pass
-
 def update_chromadb_metadata(knowledge_file: str, metadata: dict):
     """更新 ChromaDB 元数据"""
-    pass
+    # 确定集合名称
+    if "decisions" in knowledge_file:
+        collection_name = "decisions"
+    elif "errors" in knowledge_file:
+        collection_name = "error_solutions"
+    elif "patterns" in knowledge_file:
+        collection_name = "code_patterns"
+    else:
+        return  # 不支持的类型
+    
+    collection = chroma_client.get_collection(collection_name)
+    
+    # 生成文档 ID（与存储时一致）
+    doc_id = f"{metadata['date']}-{metadata.get('change_id', 'unknown')}"
+    
+    # 更新元数据
+    try:
+        collection.update(
+            ids=[doc_id],
+            metadatas=[metadata]
+        )
+    except Exception as e:
+        print(f"⚠️  更新元数据失败: {e}")
 
 def format_results(results) -> list[dict]:
     """格式化搜索结果"""
-    pass
+    formatted = []
+    
+    if not results or not results.get('documents'):
+        return formatted
+    
+    documents = results['documents'][0] if results['documents'] else []
+    metadatas = results['metadatas'][0] if results['metadatas'] else []
+    
+    for doc, metadata in zip(documents, metadatas):
+        formatted.append({
+            "content": doc[:500] + "..." if len(doc) > 500 else doc,
+            "metadata": metadata
+        })
+    
+    return formatted
 
 if __name__ == "__main__":
     app.run()

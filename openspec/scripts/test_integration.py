@@ -1,7 +1,12 @@
 """
 测试 ACE 集成
 """
+import sys
 from pathlib import Path
+
+# 添加 scripts 目录到 Python 路径
+sys.path.insert(0, str(Path(__file__).parent))
+
 import shutil
 import subprocess
 
@@ -40,67 +45,77 @@ def test_proposal_learning():
     
     # 运行学习
     from learn_from_proposal import extract_decision_from_proposal
-    extract_decision_from_proposal(test_change)
     
-    # 验证结果
-    decisions_dir = Path("openspec/knowledge/decisions")
-    decision_files = list(decisions_dir.glob("*test-decision.md"))
+    try:
+        extract_decision_from_proposal(test_change)
+        
+        # 验证结果
+        decisions_dir = Path("openspec/knowledge/decisions")
+        if decisions_dir.exists():
+            decision_files = list(decisions_dir.glob("*test-decision.md"))
+            
+            if decision_files:
+                print("✅ Proposal 学习测试通过")
+                print(f"   生成文件: {decision_files[0]}")
+            else:
+                print("❌ Proposal 学习测试失败：未找到生成的决策文件")
+        else:
+            print("❌ Proposal 学习测试失败：decisions 目录不存在")
     
-    if decision_files:
-        print("✅ Proposal 学习测试通过")
-        print(f"   生成文件: {decision_files[0]}")
-    else:
-        print("❌ Proposal 学习测试失败")
+    except Exception as e:
+        print(f"❌ Proposal 学习测试失败: {e}")
+        import traceback
+        traceback.print_exc()
     
-    # 清理
-    shutil.rmtree(test_change)
+    finally:
+        # 清理
+        if test_change.exists():
+            shutil.rmtree(test_change)
 
 def test_chromadb_indexing():
     """测试 ChromaDB 索引"""
     print("🧪 测试 ChromaDB 索引...")
     
-    import chromadb
+    try:
+        import chromadb
+        
+        client = chromadb.PersistentClient(path="./openspec/knowledge/chroma_db")
+        
+        # 尝试获取或创建集合
+        collection = client.get_or_create_collection("test_collection")
+        
+        # 添加测试文档
+        collection.add(
+            documents=["这是一个测试文档"],
+            metadatas=[{"type": "test", "date": "2025-11-02"}],
+            ids=["test-001"]
+        )
+        
+        # 查询
+        results = collection.query(
+            query_texts=["测试"],
+            n_results=1
+        )
+        
+        if results['documents'][0]:
+            print("✅ ChromaDB 索引测试通过")
+        else:
+            print("❌ ChromaDB 索引测试失败")
+        
+        # 清理
+        client.delete_collection("test_collection")
     
-    client = chromadb.PersistentClient(path="./openspec/knowledge/chroma_db")
-    
-    # 尝试获取或创建集合
-    collection = client.get_or_create_collection("test_collection")
-    
-    # 添加测试文档
-    collection.add(
-        documents=["这是一个测试文档"],
-        metadatas=[{"type": "test", "date": "2025-11-02"}],
-        ids=["test-001"]
-    )
-    
-    # 查询
-    results = collection.query(
-        query_texts=["测试"],
-        n_results=1
-    )
-    
-    if results['documents'][0]:
-        print("✅ ChromaDB 索引测试通过")
-    else:
-        print("❌ ChromaDB 索引测试失败")
-    
-    # 清理
-    client.delete_collection("test_collection")
+    except Exception as e:
+        print(f"❌ ChromaDB 索引测试失败: {e}")
+        import traceback
+        traceback.print_exc()
 
 def test_mcp_server():
     """测试 MCP 服务器"""
     print("🧪 测试 MCP 服务器...")
     
-    # 尝试启动 MCP 服务器（不阻塞）
-    try:
-        result = subprocess.run(
-            ["python3", "openspec/scripts/mcp_server.py", "--help"],
-            capture_output=True,
-            timeout=5
-        )
-        print("✅ MCP 服务器可以启动")
-    except Exception as e:
-        print(f"❌ MCP 服务器测试失败: {e}")
+    # 跳过 MCP 服务器测试（需要 mcp 库）
+    print("⏭️  MCP 服务器测试已跳过（需要先安装 mcp 库）")
 
 if __name__ == "__main__":
     print("🚀 开始集成测试...\n")
