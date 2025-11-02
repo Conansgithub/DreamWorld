@@ -10,8 +10,26 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="SkOllamaHelloWorld\**" />
+    <Content Remove="SkOllamaHelloWorld\**" />
+    <EmbeddedResource Remove="SkOllamaHelloWorld\**" />
+    <None Remove="SkOllamaHelloWorld\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SemanticKernel" Version="1.66.0" />
+    <PackageReference Include="Microsoft.SemanticKernel.Agents.Core" Version="1.66.0" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.22.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EditorConfigFiles Remove="\\wsl.localhost\Ubuntu\home\lily\code\DreamWorld\servers\core-api\.editorconfig" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="SkOllamaHelloWorld.csproj" />
+    <None Include="\\wsl.localhost\Ubuntu\home\lily\code\DreamWorld\servers\core-api\.editorconfig" />
   </ItemGroup>
 
 </Project>
