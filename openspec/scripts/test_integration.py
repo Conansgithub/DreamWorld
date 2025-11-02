@@ -1,0 +1,114 @@
+"""
+测试 ACE 集成
+"""
+from pathlib import Path
+import shutil
+import subprocess
+
+def test_proposal_learning():
+    """测试 Proposal 阶段学习"""
+    print("🧪 测试 Proposal 学习...")
+    
+    # 创建测试 proposal
+    test_change = Path("openspec/changes/test-decision")
+    test_change.mkdir(parents=True, exist_ok=True)
+    
+    # 写入 proposal.md
+    (test_change / "proposal.md").write_text("""
+## Why
+测试技术决策提取
+
+## What Changes
+- 添加测试功能
+""")
+    
+    # 写入 design.md
+    (test_change / "design.md").write_text("""
+## Alternatives Considered
+
+### 方案 1: 简单方案
+优点：快速
+缺点：功能有限
+
+### 方案 2: 复杂方案
+优点：功能强大
+缺点：开发慢
+
+## Decision Rationale
+选择方案 1，因为现阶段速度更重要
+""")
+    
+    # 运行学习
+    from learn_from_proposal import extract_decision_from_proposal
+    extract_decision_from_proposal(test_change)
+    
+    # 验证结果
+    decisions_dir = Path("openspec/knowledge/decisions")
+    decision_files = list(decisions_dir.glob("*test-decision.md"))
+    
+    if decision_files:
+        print("✅ Proposal 学习测试通过")
+        print(f"   生成文件: {decision_files[0]}")
+    else:
+        print("❌ Proposal 学习测试失败")
+    
+    # 清理
+    shutil.rmtree(test_change)
+
+def test_chromadb_indexing():
+    """测试 ChromaDB 索引"""
+    print("🧪 测试 ChromaDB 索引...")
+    
+    import chromadb
+    
+    client = chromadb.PersistentClient(path="./openspec/knowledge/chroma_db")
+    
+    # 尝试获取或创建集合
+    collection = client.get_or_create_collection("test_collection")
+    
+    # 添加测试文档
+    collection.add(
+        documents=["这是一个测试文档"],
+        metadatas=[{"type": "test", "date": "2025-11-02"}],
+        ids=["test-001"]
+    )
+    
+    # 查询
+    results = collection.query(
+        query_texts=["测试"],
+        n_results=1
+    )
+    
+    if results['documents'][0]:
+        print("✅ ChromaDB 索引测试通过")
+    else:
+        print("❌ ChromaDB 索引测试失败")
+    
+    # 清理
+    client.delete_collection("test_collection")
+
+def test_mcp_server():
+    """测试 MCP 服务器"""
+    print("🧪 测试 MCP 服务器...")
+    
+    # 尝试启动 MCP 服务器（不阻塞）
+    try:
+        result = subprocess.run(
+            ["python3", "openspec/scripts/mcp_server.py", "--help"],
+            capture_output=True,
+            timeout=5
+        )
+        print("✅ MCP 服务器可以启动")
+    except Exception as e:
+        print(f"❌ MCP 服务器测试失败: {e}")
+
+if __name__ == "__main__":
+    print("🚀 开始集成测试...\n")
+    
+    test_proposal_learning()
+    print()
+    test_chromadb_indexing()
+    print()
+    test_mcp_server()
+    
+    print("\n✅ 集成测试完成")

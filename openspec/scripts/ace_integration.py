@@ -1,4 +1,14 @@
 from ace import Generator, Reflector, Curator, Playbook, LiteLLMClient
+from pathlib import Path
+
+def learn_error_solution(context: dict) -> str:
+    """从错误和解决方案中生成学习文档"""
+
+def learn_code_pattern(context: dict) -> str:
+    """从 commit 提取代码模式"""
+
+def learn_system_knowledge(context: dict) -> str:
+    """从归档变更提取系统级知识"""
 
 def learn_decision(context: dict) -> str:
     """使用 ACE 框架生成结构化的技术决策文档"""

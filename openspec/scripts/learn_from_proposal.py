@@ -75,3 +75,23 @@ def list_affected_specs(specs_dir: Path) -> list[str]:
             affected.append(str(relative))
     
     return affected
+
+# 需要添加的函数：
+def index_to_chromadb(doc: str, collection: str):
+    """向量化并索引到 ChromaDB"""
+    import chromadb
+    from sentence_transformers import SentenceTransformer
+    
+    client = chromadb.PersistentClient(path="./openspec/knowledge/chroma_db")
+    collection = client.get_or_create_collection(collection)
+    
+    # 提取元数据
+    metadata = extract_yaml_frontmatter(doc)
+    doc_id = f"{metadata['date']}-{metadata.get('slug', 'doc')}"
+    
+    # 添加到集合
+    collection.add(
+        documents=[doc],
+        metadatas=[metadata],
+        ids=[doc_id]
+    )

@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# OpenSpec 命令包装器，自动触发学习
+
+COMMAND=$1
+shift  # 移除第一个参数
+
+case "$COMMAND" in
+  "proposal")
+    # 执行原始命令
+    openspec proposal "$@"
+    EXIT_CODE=$?
+    
+    # 如果成功，触发学习
+    if [ $EXIT_CODE -eq 0 ]; then
+      CHANGE_ID=$(ls -t openspec/changes/ | head -1)
+      python3 openspec/scripts/learn_from_proposal.py "openspec/changes/$CHANGE_ID"
+    fi
+    exit $EXIT_CODE
+    ;;
+    
+  "archive")
+    # 提取 change-id
+    CHANGE_ID=$1
+    
+    # 执行原始命令
+    openspec archive "$@"
+    EXIT_CODE=$?
+    
+    # 如果成功，触发学习
+    if [ $EXIT_CODE -eq 0 ]; then
+      python3 openspec/scripts/learn_from_archive.py "$CHANGE_ID"
+    fi
+    exit $EXIT_CODE
+    ;;
+    
+  *)
+    # 其他命令直接透传
+    openspec "$COMMAND" "$@"
+    ;;
+esac

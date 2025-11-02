@@ -6,6 +6,9 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import subprocess
 import re
+from pathlib import Path
+from datetime import datetime
+import os
 
 class ImplementationWatcher(FileSystemEventHandler):
     def __init__(self, change_id: str):
@@ -56,6 +59,18 @@ class ImplementationWatcher(FileSystemEventHandler):
         index_to_chromadb(error_doc, collection="error_solutions")
         
         print(f"✅ 自动学习：捕获了错误解决方案 - {error_info['summary']}")
+
+def parse_test_failure(output: str) -> dict:
+    """解析测试失败信息"""
+    pass
+
+def is_duplicate_error(self, error_info: dict) -> bool:
+    """检查是否重复错误"""
+    pass
+
+def index_to_chromadb(doc: str, collection: str):
+    """向量化索引"""
+    pass
 
 # 启动监视器
 def start_watching(change_id: str):

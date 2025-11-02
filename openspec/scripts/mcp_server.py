@@ -192,5 +192,29 @@ def search_by_spec(spec_path: str, collection_name: str, top_k: int = 5) -> list
     
     return format_results(results)
 
+def extract_solution_summary(doc: str) -> str:
+    """提取解决方案摘要"""
+    pass
+
+def extract_code_block(doc: str) -> str:
+    """提取代码块"""
+    pass
+
+def extract_yaml_frontmatter(content: str) -> dict:
+    """解析 YAML frontmatter"""
+    pass
+
+def replace_yaml_frontmatter(content: str, metadata: dict) -> str:
+    """替换 YAML frontmatter"""
+    pass
+
+def update_chromadb_metadata(knowledge_file: str, metadata: dict):
+    """更新 ChromaDB 元数据"""
+    pass
+
+def format_results(results) -> list[dict]:
+    """格式化搜索结果"""
+    pass
+
 if __name__ == "__main__":
     app.run()

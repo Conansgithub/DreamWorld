@@ -122,3 +122,33 @@ Claude Code 将始终加载此文件。
                 content += f"*来源: {item['source']} | 有用次数: {item['helpful']}*\n\n"
     
     return content
+
+def extract_component_name(line: str) -> str:
+    """从标记行提取组件名"""
+    pass
+
+def extract_yaml_frontmatter(content: str) -> dict:
+    """解析 YAML frontmatter"""
+    import yaml
+    # 实现解析逻辑
+    pass
+
+def collect_related_errors(change_id: str) -> list[dict]:
+    """收集相关错误"""
+    pass
+
+def collect_related_patterns(change_id: str) -> list[dict]:
+    """收集相关模式"""
+    pass
+
+def extract_high_value_insights(system_insight: str) -> list[dict]:
+    """从系统洞察中提取高价值见解"""
+    pass
+
+def parse_claude_md_insights(content: str) -> list[dict]:
+    """解析 CLAUDE.md 中的现有见解"""
+    pass
+
+def update_playbook_from_insights(system_insight: str):
+    """从洞察更新 Playbook"""
+    pass
