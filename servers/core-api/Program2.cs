@@ -5,11 +5,11 @@ using System.Text;
 // --- Step 1: 设置Ollama的连接信息 ---
 // Ollama暴露的API端点，通常是这个地址。
 // 如果你的Ollama在不同的机器或端口上，请修改这里。
-string ollamaEndpoint = "http://localhost:57572";
+string ollamaEndpoint = "http://localhost:11434/v1";
 
 // 你想使用的本地模型名称，必须是你已经用 `ollama pull` 下载好的。
 // 例如: "llama3", "mistral", "qwen2", "gemma:2b"
-string modelId = "gpt-oss:20b";
+string modelId = "qwen3:1.7b";
 
 Console.OutputEncoding = Encoding.UTF8; // 确保终端能正确显示中文等字符
 Console.WriteLine("✨ Semantic Kernel is calling local Ollama...");
